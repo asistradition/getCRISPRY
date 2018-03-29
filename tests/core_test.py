@@ -1,11 +1,14 @@
-from getCRISPRY.lib.grna_scorer import find_grna, get_candidates
-from getCRISPRY.cutters.cas9 import cas9
-from getCRISPRY.lib.bowtie2 import bowtie_get_hits, bowtie_make_index
-from getCRISPRY.lib.degenerate_tools import fix_seq_object, fix_seq_object_list
-
+import sys
 import tempfile
 import shutil
 import os
+
+sys.path.insert(0, "../")
+
+from lib.grna_scorer import find_grna, get_candidates
+from cutters.cas9 import cas9
+from lib.bowtie2 import bowtie_get_hits, bowtie_make_index
+from lib.degenerate_tools import fix_seq_object, fix_seq_object_list
 
 from Bio import SeqIO
 
@@ -91,14 +94,16 @@ def grna_finder_test(verbose=False):
 
 
 def grna_optimal_locator_test(verbose=False):
-    grnas = find_grna(REGION_CAS9_FINDER_TEST_SEQ, REGION_CAS9_FINDER_TEST_INDEX)
-    for target_seq, target_score, target_offtarget in grnas:
-        if verbose:
-            print("{}\t{}\t{}".format(target_seq, target_score, target_offtarget))
-    assert len(grnas) == 108
-    assert grnas[0][0] == "AAAACTATGTTACGTCGCCTTGG"
-    print("Offtarget search module passed")
-
+    try:
+        grnas = find_grna(REGION_CAS9_FINDER_TEST_SEQ, REGION_CAS9_FINDER_TEST_INDEX)
+        for target_seq, target_score, target_offtarget in grnas:
+            if verbose:
+                print("{}\t{}\t{}".format(target_seq, target_score, target_offtarget))
+        assert len(grnas) == 108
+        assert grnas[0][0] == "AAAACTATGTTACGTCGCCTTGG"
+        print("Offtarget search module passed")
+    except FileNotFoundError as err:
+        print("Offtarget search module test skipped:\t{}".format(str(err)))
 
 if __name__ == '__main__':
     cas9_score_test(verbose=False)
