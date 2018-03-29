@@ -1,4 +1,4 @@
-from lib.grna_scorer import find_grna, get_candidates
+from getCRISPRY.lib.grna_scorer import find_grna, get_candidates
 from cutters.cas9 import cas9
 from lib.bowtie2 import bowtie_get_hits, bowtie_make_index
 from lib.degenerate_tools import fix_seq_object, fix_seq_object_list
@@ -104,4 +104,4 @@ if __name__ == '__main__':
     cas9_score_test(verbose=False)
     bowtie_test(verbose=False)
     grna_finder_test(verbose=False)
-    grna_optimal_locator_test(verbose=True)
+    grna_optimal_locator_test(verbose=False)
