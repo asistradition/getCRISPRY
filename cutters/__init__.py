@@ -12,13 +12,22 @@ class Cutter():
 
     # These class parameters must be set when Cutter is extended
     cutter_name = None
-
     PAM = None
     PAM_3prime = True
     PAM_grid = None
-
     spacer_length = None
+
+    # These class parameters can be set when Cutter is extended.
+    seq = None
+    name = None
     default_penalty = 0.85
+
+    @classmethod
+    def __str__(cls):
+        if cls.name is not None:
+            return cls.name
+        else:
+            raise AttributeError("Undefined name")
 
     @classmethod
     def on_target_score(cls, guide_sequence, target_sequence):

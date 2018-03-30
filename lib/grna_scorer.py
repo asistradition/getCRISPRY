@@ -170,7 +170,7 @@ def _find_location(query, bowtie_idx, require_unique=False, cores=1):
             r_start = r_pos
             r_end = r_pos + len(query)
             try:
-                regions.append(r_chr, r_start, r_end, r_strand)
+                regions.append((r_chr, r_start, r_end, r_strand))
             except AttributeError:
                 regions = [(r_chr, r_start, r_end, r_strand)]
 
