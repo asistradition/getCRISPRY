@@ -3,7 +3,7 @@ python:
   - 2.7
   - 3.6
 install:
-  - apt-get install bowtie2
+  - sudo apt-get install bowtie2
   - pip install -r requirements.txt
 script:
   - tests/core_test.py
