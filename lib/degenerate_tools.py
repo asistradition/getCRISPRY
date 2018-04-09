@@ -22,6 +22,9 @@ DNA_EQUALITY = {"A": ["A", "N", "R", "M", "W", "V", "D", "H"],
 
 
 def str_compare_degenerate(str1, str2, alphabet=DNA_EQUALITY):
+    str1 = str1.strip()
+    str2 = str2.strip()
+
     if len(str1) != len(str2):
         return False
 
@@ -70,4 +73,4 @@ def fix_seq_object(obj, alphabet=generic_dna, make_type="str"):
 
 def rc_string(seq, alphabet=generic_dna):
     seq = fix_seq_object(seq, make_type="str")
-    return str(Seq(seq, alphabet=generic_dna).reverse_complement())
+    return str(Seq(seq, alphabet=alphabet).reverse_complement())

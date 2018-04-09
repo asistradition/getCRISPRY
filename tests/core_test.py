@@ -2,6 +2,7 @@ import sys
 import tempfile
 import shutil
 import os
+import unittest
 
 sys.path.insert(0, "../")
 
@@ -36,78 +37,88 @@ SPECIFIC_OFFTARGET_TEST_SEQ = "ATGTTTAGAGGTTGCTGCTTTGG"
 REGION_CAS9_FINDER_TEST_INDEX = os.path.join("..", "bowtie_sc", "sc_genome")
 
 
-def cas9_score_test(verbose=False):
-    for guide, target, expect_score in CAS9_TEST:
-        score = cas9.off_target_score(guide, target)
+class TestCutter(unittest.TestCase):
+
+    def test_cas9_score(self, verbose=False):
+
+        for guide, target, expect_score in CAS9_TEST:
+            score = cas9.off_target_score(guide, target)
+            if verbose:
+                print("{}\t{}\t{}".format(guide, target, score))
+
+            assert score == expect_score
+
+        try:
+            cas9.acceptable_sequence("AATTGCTTAATTTGACTGAACGG")
+            assert False
+        except ValueError:
+            assert True
+
         if verbose:
-            print("{}\t{}\t{}".format(guide, target, score))
+            print("Cas9 scoring module passed")
 
-        assert score == expect_score
+class TestBowtie(unittest.TestCase):
 
-    try:
-        cas9.acceptable_sequence("AATTGCTTAATTTGACTGAACGG")
-        assert False
-    except ValueError:
-        assert True
+    def test_bowtie(self, verbose=False):
+        genome = fix_seq_object(GENOMIC_TEST, make_type="seqrecord")
+        genome.id = "Genome"
+        query = fix_seq_object_list(BOWTIE_QUERY, make_type="seqrecord")
 
-    print("Cas9 scoring module passed")
+        try:
+            _hand, _name = tempfile.mkstemp()
+            _dir = tempfile.mkdtemp()
+
+            with open(_hand, mode="w") as temp_fh:
+                SeqIO.write(genome, temp_fh, format="fasta")
+
+            matches = bowtie_get_hits(query, bowtie_make_index(_dir, _name))
+
+            for q_seq, hits in matches.items():
+                for map_seq, chrn, pos, strand, nm in hits:
+                    if verbose:
+                        print("\t".join(map(str, [q_seq, chrn, pos, strand, nm, map_seq])))
+
+        finally:
+            try:
+                shutil.rmtree(_dir)
+            except UnboundLocalError:
+                pass
+            try:
+                os.remove(_name)
+            except UnboundLocalError:
+                pass
+
+        if verbose:
+            print("Bowtie search module passed")
 
 
-def bowtie_test(verbose=False):
-    genome = fix_seq_object(GENOMIC_TEST, make_type="seqrecord")
-    genome.id = "Genome"
-    query = fix_seq_object_list(BOWTIE_QUERY, make_type="seqrecord")
+class GuideFinderTest(unittest.TestCase):
+    def test_grna_finder(self, verbose=False):
+        grnas = get_candidates(GENOMIC_TEST)
 
-    try:
-        _hand, _name = tempfile.mkstemp()
-        _dir = tempfile.mkdtemp()
-
-        with open(_hand, mode="w") as temp_fh:
-            SeqIO.write(genome, temp_fh, format="fasta")
-
-        matches = bowtie_get_hits(query, bowtie_make_index(_dir, _name))
-
-        for q_seq, hits in matches.items():
-            for map_seq, chrn, pos, strand, nm in hits:
+        for seq in grnas:
+            for start, stop, strand in grnas[seq]:
                 if verbose:
-                    print("\t".join(map(str, [q_seq, chrn, pos, strand, nm, map_seq])))
+                    print("{}\t{}\t{}\t{}".format(start, stop, strand, seq))
 
-    except:
-        raise
-    finally:
-        shutil.rmtree(_dir)
-        os.remove(_name)
-
-    print("Bowtie search module passed")
+        assert len(grnas) == CAS9_GENOMIC_SITES
+        if verbose:
+            print("Cut site location module passed")
 
 
-def grna_finder_test(verbose=False):
-    grnas = get_candidates(GENOMIC_TEST)
-
-    for seq in grnas:
-        for start, stop, strand in grnas[seq]:
+    def test_grna_optimal_locator(self, verbose=False):
+        try:
+            _, grnas = GetCRISPRs(REGION_CAS9_FINDER_TEST_INDEX,
+                               verbose=verbose).find_grna(fix_seq_object(REGION_CAS9_FINDER_TEST_SEQ, make_type="seqrecord"))
+            for target_seq, target_score, target_offtarget in grnas:
+                if verbose:
+                    print("{}\t{}\t{}".format(target_seq, target_score, target_offtarget))
+            assert len(grnas) == 101
+            assert grnas[0][0] == "AAAACTATGTTACGTCGCCTTGG"
             if verbose:
-                print("{}\t{}\t{}\t{}".format(start, stop, strand, seq))
-
-    assert len(grnas) == CAS9_GENOMIC_SITES
-    print("Cut site location module passed")
-
-
-def grna_optimal_locator_test(verbose=False):
-    try:
-        _, grnas = GetCRISPRs(REGION_CAS9_FINDER_TEST_INDEX,
-                           verbose=verbose).find_grna(fix_seq_object(REGION_CAS9_FINDER_TEST_SEQ, make_type="seqrecord"))
-        for target_seq, target_score, target_offtarget in grnas:
-            if verbose:
-                print("{}\t{}\t{}".format(target_seq, target_score, target_offtarget))
-        assert len(grnas) == 108
-        assert grnas[0][0] == "AAAACTATGTTACGTCGCCTTGG"
-        print("Offtarget search module passed")
-    except FileNotFoundError as err:
-        print("Offtarget search module test skipped:\t{}".format(str(err)))
+                print("Offtarget search module passed")
+        except FileNotFoundError as err:
+            print("Offtarget search module test skipped:\t{}".format(str(err)))
 
 if __name__ == '__main__':
-    cas9_score_test(verbose=False)
-    bowtie_test(verbose=False)
-    grna_finder_test(verbose=False)
-    grna_optimal_locator_test(verbose=True)
+    unittest.main()

@@ -2,19 +2,17 @@ from __future__ import print_function
 
 from lib.degenerate_tools import str_compare_degenerate, fix_seq_object, rc_string
 
-class Cutter():
+class Cutter:
     """
     Cutter is an class that holds the framework for a CRISPR-type RNA-directed DNA binding enzyme.
     The class parameters should be set within a child that extends this class.
     Scoring algorithms can also be overloaded within the child class to give cutter-specific scoring
     """
 
-
     # These class parameters must be set when Cutter is extended
     cutter_name = None
     PAM = None
     PAM_3prime = True
-    PAM_grid = None
     spacer_length = None
 
     # These class parameters can be set when Cutter is extended.
@@ -38,7 +36,6 @@ class Cutter():
             return 1
         else:
             return 0
-
 
     @classmethod
     def off_target_score(cls, guide_sequence, target_sequence):
@@ -112,7 +109,7 @@ class Cutter():
             return seq[len(cls.PAM):]
 
     @classmethod
-    def acceptable_sequence(cls, seq):
+    def acceptable_sequence(cls, seq, stem_length=4, loop_length=6, homopolymer_max=3):
         """
         Checks to see if a sequence is an acceptable guide on structure only (does not look for PAM sequence,
         valid_target should be used for that). Raises a ValueError if the sequence has unsuitable regions.
@@ -138,24 +135,13 @@ class Cutter():
                 a_chr = seq[i]
                 chr_count = 0
 
-            if chr_count > 3:
+            if chr_count > homopolymer_max:
                 raise StructureUnsuitedError("Homopolymer")
 
         # Quick and dirty check for hairpins
-        def _slider(seq, length=4, max_iter=None):
-            if len(seq) - length <= 0:
-                raise StopIteration
-            for i in range(len(seq) - length):
-                if max_iter is not None and max_iter < i:
-                    raise StopIteration
-                yield i, i + length, seq[i:i + length]
-
-        for i, i_stop, si in _slider(seq):
-            for j, _, sj in _slider(seq[i_stop:], max_iter=6):
-                if j < 3:
-                    continue
-                if si == rc_string(sj):
-                    raise StructureUnsuitedError("Hairpin")
+        for si, sj in cls._hairpin_slider(seq, stem_length=stem_length, loop_length=loop_length):
+            if si == rc_string(sj):
+                raise StructureUnsuitedError("Hairpin")
 
         return True
 
@@ -222,6 +208,30 @@ class Cutter():
             target_sequence = target_sequence[len(cls.PAM):]
 
         return guide_sequence, target_sequence, pam_seq
+
+    @classmethod
+    def _hairpin_slider(cls, s, stem_length=4, loop_length=None):
+
+        if len(s) - stem_length <= 0:
+            raise StopIteration
+
+        for start_1 in range(len(s) - stem_length):
+
+            stop_1 = start_1 + stem_length
+            seq1 = s[start_1:stop_1]
+
+            for k in range(min(loop_length, len(s[stop_1:]))):
+
+                start_2 = k + stop_1
+                stop_2 = start_2 + stem_length
+
+                if stop_2 > len(s):
+                    break
+
+                seq2 = s[start_2:start_2 + stem_length]
+
+                yield seq1, seq2
+
 
 class PAMNotFoundError(LookupError):
     pass

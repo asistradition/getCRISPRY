@@ -5,6 +5,7 @@ from .degenerate_tools import fix_seq_object
 import tempfile
 import os
 import subprocess
+import io
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -17,7 +18,6 @@ SAMTOOLS_MAP = {"FLAG": 1,
 
 BOWTIE_SEED_LENGTH = 10
 BOWTIE_SEED_MISMATCH = 1
-
 
 
 def bowtie_make_index(dir_path, genome):
@@ -65,18 +65,8 @@ def bowtie_get_hits(query, db_path, cores=1):
         chromosome of the mapped location, the position of the mapped location, the strand, and the number of mismatches
         to the query sequence
     """
-    try:
-        sam = _bowtie_align(query, db_path, cores=cores)
-        hits = _bowtie_sam_parse(sam)
-    except:
-        raise
-    finally:
-        try:
-            os.remove(sam)
-        except FileNotFoundError:
-            pass
 
-    return hits
+    return _bowtie_sam_parse(_bowtie_align(query, db_path, cores=cores))
 
 
 def bowtie_check_index(db_path):
@@ -114,35 +104,25 @@ def _bowtie_align(query, db_path, sam_path=None, cores=1):
     :return: str
         Returns a path to the output SAM file (unchanged, unless the param sam_path was not set)
     """
-    try:
 
-        #Create a temporary file to hold the queries
-        _hand, fasta_name = tempfile.mkstemp()
+    # Write the queries into a string as a FASTA file
+    temp_str = io.StringIO()
+    SeqIO.write(query, temp_str, format="fasta")
 
+    # Pipe the FASTA string into bowtie 2 and pipe the output.
+    bowtie_cmd = map(str, ["bowtie2", "-f", "/dev/stdin", "-x", db_path, "-a", "-L", BOWTIE_SEED_LENGTH,
+                  "-N", BOWTIE_SEED_MISMATCH, "--mp", "1,1", "--threads", cores])
+    proc = subprocess.run(bowtie_cmd, input=temp_str.getvalue(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                          universal_newlines=True)
+    proc.check_returncode()
 
-        #Create a temporary file to hold the SAM output, if a path was not provided
-        if sam_path is None:
-            _, sam_path = tempfile.mkstemp()
+    # Stash the piped output (SAM file) in a string
+    sam = io.StringIO(proc.stdout.strip())
 
-        #Write the queries out as a FASTA file
-        with open(_hand, mode="w") as temp_fh:
-            SeqIO.write(query, temp_fh, format="fasta")
-
-        #Run bowtie 2 and put the output into /dev/null. Check the return code.
-        bowtie_cmd = ["bowtie2", "-f", fasta_name, "-x", db_path, "-S", sam_path, "-a", "-L", str(BOWTIE_SEED_LENGTH),
-                      "-N", str(BOWTIE_SEED_MISMATCH), "--mp", "1,1", "--threads", str(cores)]
-        proc = subprocess.run(bowtie_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        proc.check_returncode()
-    except:
-        raise
-    finally:
-        #Clean up the temporary FASTA file
-        os.remove(fasta_name)
-
-    return sam_path
+    return sam
 
 
-def _bowtie_sam_parse(sam_path, remove=False):
+def _bowtie_sam_parse(sam, remove=False):
     """
     Takes a path to a sam file produced by bowtie and parses it into a dict keyed by query of hits
 
@@ -157,23 +137,17 @@ def _bowtie_sam_parse(sam_path, remove=False):
         to the query sequence
     """
     sequences = {}
-    try:
-        with open(sam_path, mode="rU") as sam_fh:
-            for line in sam_fh:
-                try:
-                    query_seq, map_seq, rname, pos, strand, nm = _parse_sam_line(line)
-                except ValueError:
-                    continue
 
-                try:
-                    sequences[str(query_seq)].append((map_seq, rname, pos, strand, nm))
-                except KeyError:
-                    sequences[str(query_seq)] = [(map_seq, rname, pos, strand, nm)]
-    except:
-        raise
-    finally:
-        if remove:
-            os.remove(sam_path)
+    for line in sam:
+        try:
+            query_seq, map_seq, rname, pos, strand, nm = _parse_sam_line(line)
+        except ValueError:
+            continue
+
+        try:
+            sequences[str(query_seq)].append((map_seq, rname, pos, strand, nm))
+        except KeyError:
+            sequences[str(query_seq)] = [(map_seq, rname, pos, strand, nm)]
 
     return sequences
 
