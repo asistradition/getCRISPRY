@@ -126,9 +126,6 @@ def grna_builder(queries, genome_path, genome_type="fasta", locations=None, outf
 
         return data
 
-    except:
-        raise
-
     finally:
         # Clean up the temp file and close any outstanding file handles
         if genome_type.lower() != "bowtie":
