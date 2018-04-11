@@ -6,10 +6,10 @@ import unittest
 
 sys.path.insert(0, "../")
 
-from getCRISPRY.lib.grna_scorer import GetCRISPRs, get_candidates
-from getCRISPRY.cutters.cas9 import cas9
-from getCRISPRY.lib.bowtie2 import bowtie_get_hits, bowtie_make_index
-from getCRISPRY.lib.degenerate_tools import fix_seq_object, fix_seq_object_list
+from ..lib.grna_scorer import GetCRISPRs, get_candidates
+from ..cutters.cas9 import cas9
+from ..lib.bowtie2 import bowtie_get_hits, bowtie_make_index
+from ..lib.degenerate_tools import fix_seq_object, fix_seq_object_list
 
 from Bio import SeqIO
 
