@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from lib.degenerate_tools import str_compare_degenerate, fix_seq_object, rc_string
+from ..lib.degenerate_tools import str_compare_degenerate, fix_seq_object, rc_string
 
 class Cutter:
     """

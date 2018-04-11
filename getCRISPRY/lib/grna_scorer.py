@@ -1,9 +1,9 @@
 from __future__ import print_function
 
-from lib.degenerate_tools import fix_seq_object, fix_seq_object_list, rc_string
-from lib.bowtie2 import bowtie_get_hits, bowtie_check_index
-from cutters.cas9 import cas9
-from cutters import PAMNotFoundError
+from .degenerate_tools import fix_seq_object, fix_seq_object_list, rc_string
+from .bowtie2 import bowtie_get_hits, bowtie_check_index
+from ..cutters.cas9 import cas9
+from ..cutters import PAMNotFoundError
 
 from Bio.SeqUtils import GC
 
