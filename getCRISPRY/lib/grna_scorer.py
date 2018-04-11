@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import errno
+
 from .degenerate_tools import fix_seq_object, fix_seq_object_list, rc_string
 from .bowtie2 import bowtie_get_hits, bowtie_check_index
 from ..cutters.cas9 import cas9
@@ -46,8 +48,9 @@ class GetCRISPRs:
         try:
             bowtie_check_index(bowtie_idx)
             self.idx = bowtie_idx
-        except FileNotFoundError:
-            print("{} bowtie index not found".format(bowtie_idx))
+        except OSError as err:
+            if err.errno == errno.ENOENT:
+                print("{} bowtie index not found".format(bowtie_idx))
             raise
 
         self.at_optimal = at_optimal

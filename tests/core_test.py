@@ -1,10 +1,8 @@
-import sys
 import tempfile
 import shutil
 import os
 import unittest
-
-sys.path.insert(0, "../")
+import errno
 
 from getCRISPRY.lib.grna_scorer import GetCRISPRs, get_candidates
 from getCRISPRY.cutters.cas9 import cas9
@@ -117,8 +115,11 @@ class GuideFinderTest(unittest.TestCase):
             assert grnas[0][0] == "AAAACTATGTTACGTCGCCTTGG"
             if verbose:
                 print("Offtarget search module passed")
-        except FileNotFoundError as err:
-            print("Offtarget search module test skipped:\t{}".format(str(err)))
+        except OSError as err:
+            if err.errno == errno.ENOENT:
+                print("Offtarget search module test skipped:\t{}".format(os.strerror(errno.ENOENT)))
+            else:
+                raise
 
 if __name__ == '__main__':
     unittest.main()

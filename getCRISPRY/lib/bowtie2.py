@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from .degenerate_tools import fix_seq_object
 
-import tempfile
+import errno
 import os
 import subprocess
 import io
@@ -34,10 +34,10 @@ def bowtie_make_index(dir_path, genome):
     """
 
     if not os.path.isfile(genome):
-        raise FileNotFoundError
+        raise OSError(errno.ENOENT)
 
     if not os.path.isdir(dir_path):
-        raise NotADirectoryError
+        raise OSError(errno.ENOTDIR)
 
     _, gen_name = os.path.split(genome)
 
@@ -83,7 +83,7 @@ def bowtie_check_index(db_path):
         proc = subprocess.run(inspect_command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         proc.check_returncode()
     except subprocess.CalledProcessError as err:
-        raise FileNotFoundError("Unable to inspect bowtie index")
+        raise OSError(errno.ENOENT, "Unable to inspect bowtie index")
 
     return True
 
