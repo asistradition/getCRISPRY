@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="getCRISPRY",
@@ -6,6 +6,6 @@ setup(
     license="MIT",
     description="CRISPR Target Design",
     author="Chris Jackson",
-    packages=["getCRISPRY"],
+    packages=find_packages(exclude=["tests"]),
     install_requires=["biopython"]
 )
