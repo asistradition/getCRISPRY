@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/asistradition/getCRISPRY.svg?branch=master)](https://travis-ci.org/asistradition/getCRISPRY)
+[![Build Status](https://travis-ci.org/asistradition/getCRISPRY.svg?branch=master)](https://travis-ci.org/asistradition/getCRISPRY)[![codecov](https://codecov.io/gh/asistradition/getCRISPRY/branch/master/graph/badge.svg)](https://codecov.io/gh/asistradition/getCRISPRY)
 
 # getCRISPRY 
 
