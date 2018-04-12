@@ -1,9 +1,17 @@
 language: python
+
 python:
   - 3.6
+
 install:
   - sudo apt-get install bowtie2
   - pip install -r requirements.txt
+  - pip install codecov
   - python setup.py install
+
 script:
-  - python tests/core_test.py
+  - coverage run tests/core_test.py
+
+after_success:
+  - codecov
+
