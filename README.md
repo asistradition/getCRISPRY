@@ -1,4 +1,4 @@
-# getCRISPRY [![Build Status](https://travis-ci.org/asistradition/getCRISPRY.svg?branch=master)](https://travis-ci.org/asistradition/getCRISPRY)[![codecov](https://codecov.io/gh/asistradition/getCRISPRY/branch/master/graph/badge.svg)](https://codecov.io/gh/asistradition/getCRISPRY)
+# getCRISPRY [![Build Status](https://travis-ci.org/asistradition/getCRISPRY.svg?branch=master)](https://travis-ci.org/asistradition/getCRISPRY) [![codecov](https://codecov.io/gh/asistradition/getCRISPRY/branch/master/graph/badge.svg)](https://codecov.io/gh/asistradition/getCRISPRY)
 
 This is a python package which facilitates CRISPR guide RNA design. 
 It takes sequences of arbitrary length (like a gene) and searches for potential CRISPR guides within the input.

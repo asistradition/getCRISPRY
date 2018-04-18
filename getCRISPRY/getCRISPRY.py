@@ -99,7 +99,7 @@ def grna_builder(queries, genome_path, genome_type="fasta", locations=None, outf
         # Create a temporary bowtie index if the genome was provided as a fasta file
         if genome_type.lower() != "bowtie":
             bowtie_dir = tempfile.mkdtemp()
-            bowtie_idx = bowtie_make_index(genome_path, bowtie_dir)
+            bowtie_idx = bowtie_make_index(bowtie_dir, genome_path)
         else:
             bowtie_idx = genome_path
 
